@@ -5,10 +5,8 @@
 
 import Foundation
 import CoreBluetooth
-
 import JLLogHelper
 import JL_BLEKit
-//import JL_OTALib
 
 /// Manages Jieli devices using JL_BLEKit
 class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
@@ -41,13 +39,11 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     // MARK: - Discovery
 
     func startDiscovery(callback: @escaping (JieliDevice) -> Void) {
-        Logger.log()
         self.discoveryCallback = callback
         startScanning()
     }
 
     func stopDiscovery() {
-        Logger.log()
         self.discoveryCallback = nil
         stopScanning()
     }
@@ -57,7 +53,6 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     var isConnected = false
 
     func connect(device: JieliDevice, callback: @escaping (Result<Void, any Error>) -> Void) {
-        Logger.log()
         device.peripheral.delegate = self
         self.connectionCallback = callback
         self.device = device
@@ -65,9 +60,8 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     func disconnect(callback: @escaping (Result<Void, any Error>) -> Void) {
-        Logger.log()
         guard let peripheral = device?.peripheral else {
-            Logger.log("Not connected")
+            Logger.logError("No device")
             doDisconnect()
             callback(.success(()))
             return
@@ -78,12 +72,10 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     func startObservingConnection(callback: @escaping (Bool) -> Void) {
-        Logger.log()
         self.connectionObserver = callback
     }
 
     func stopObservingConnection() {
-        Logger.log()
         self.connectionObserver = nil
     }
 
@@ -98,7 +90,7 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             Logger.log("\(otaResult), progress: \(progress)")
             switch otaResult {
             case .success:
-                callback(.success(100))
+                callback(.success(101))
             case .fail, .failSameSN, .dataIsNull, .commandFail, .seekFail, .infoFail, .lowPower,
                     .enterFail, .failedConnectMore, .failVerification,
                     .failCompletely, .failKey, .failErrorFile, .failUboot, .failLenght,
@@ -128,7 +120,6 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     // MARK: - CBCentralManagerDelegate
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        Logger.log()
         self.jlAssist.assistUpdate(central.state)
         if central.state == .poweredOn && self.discoveryCallback != nil {
             startScanning()
@@ -155,14 +146,13 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        Logger.log()
         self.jlAssist.mLimitMtu = peripheral.maximumWriteValueLength(for: .withResponse)
         peripheral.discoverServices(nil)
     }
 
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: (any Error)?) {
         if let error { Logger.logError("\(error)") }
-        let connectionError: Error = error ?? NSError(domain: "com.pipacs.Sandbox", code: -1)
+        let connectionError: Error = error ?? Self.genericError
         connectionCallback?(.failure(connectionError))
         doDisconnect()
     }
@@ -193,7 +183,6 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             Logger.logError("\(error)")
             return
         }
-        Logger.log()
         jlAssist.assistDiscoverCharacteristics(for: service, peripheral: peripheral)
     }
 
@@ -202,7 +191,6 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             Logger.logError("\(error)")
             return
         }
-        Logger.log()
         self.jlAssist.assistUpdate(characteristic, peripheral: peripheral) { [weak self] success in
             guard success  else {
                 Logger.logError("assistUpdate failed, forcing disconnection")
@@ -248,19 +236,16 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     private func startScanning() {
-        Logger.log()
         guard centralManager.state == .poweredOn else { return }
         centralManager.scanForPeripherals(withServices: nil)
     }
 
     private func stopScanning() {
-        Logger.log()
         centralManager.stopScan()
     }
 
     /// Reset internal state after disconnecting from current device
     private func doDisconnect() {
-        Logger.log()
         self.device = nil
         self.isConnected = false
         self.connectionObserver?(false)

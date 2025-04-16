@@ -36,7 +36,6 @@ class DeviceVC: UIViewController {
         super.viewDidLoad()
         navigationItem.title = device.name
         view.backgroundColor = .systemBackground
-
         let reloadButton = UIBarButtonItem(image: UIImage(systemName: "square.and.arrow.down"), style: .plain, target: self, action: #selector(updateFirmware))
         navigationItem.rightBarButtonItem = reloadButton
     }
@@ -86,9 +85,12 @@ class DeviceVC: UIViewController {
         case .success(let progress):
             if progress == 0 {
                 fotaHUD.message = "Starting"
-            } else if progress == 100 {
-                fotaHUD.message = "Completed"
-                fotaHUD.dismiss(animated: true)
+            } else if progress == 101 {
+                fotaHUD.dismiss(animated: true) {
+                    let alert = UIAlertController(title: "Update Completed", message: nil, preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "Close", style: .cancel))
+                    self.present(alert, animated: true)
+                }
             } else {
                 let progressValue = Int(progress * 100)
                 fotaHUD.message = "Updating: \(progressValue)%"
