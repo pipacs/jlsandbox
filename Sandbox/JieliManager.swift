@@ -104,7 +104,7 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                     .failCompletely, .failKey, .failErrorFile, .failUboot, .failLenght,
                     .failFlash, .failCmdTimeout, .failSameVersion, .failTWSDisconnect,
                     .failNotInBin:
-                callback(.failure(Self.genericError))
+                callback(.failure(Self.makeError(code: otaResult.rawValue)))
             case .upgrading, .reconnect, .reboot, .prepared, .statusIsUpdating,
                     .reconnectWithMacAddr, .disconnect, .unknown:
                 callback(.success(progress))
@@ -239,11 +239,13 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private let rcspService = "AE00"
     private let rcspWriteCharacteristic = "AE01"
     private let rcspReadCharacteristic = "AE02"
-    private static let genericError = NSError(domain: "com.pipacs.Sandbox", code: -1)
+    private static let genericError = makeError(code: 42)
     private var didCancelFOTA = false
-
-    /// Jieli Bluetooth assistant
     private let jlAssist: JL_Assist
+
+    private static func makeError(code: UInt8) -> NSError {
+        NSError(domain: "com.pipacs.sandbox", code: Int(code))
+    }
 
     private func startScanning() {
         Logger.log()

@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import JL_OTALib
 
 class DeviceVC: UIViewController {
     let device: JieliDevice
@@ -87,13 +88,26 @@ class DeviceVC: UIViewController {
                 fotaHUD.message = "Starting"
             } else if progress == 100 {
                 fotaHUD.message = "Completed"
+                fotaHUD.dismiss(animated: true)
             } else {
                 let progressValue = Int(progress * 100)
                 fotaHUD.message = "Updating: \(progressValue)%"
             }
         case .failure(let error):
             Logger.logError("\(error)")
-            fotaHUD.dismiss(animated: true)
+            fotaHUD.dismiss(animated: true) {
+                let errorMessage: String
+                if  let errorCode = UInt8(exactly: (error as NSError).code),
+                    let otaResult = JL_OTAResult(rawValue: errorCode)
+                {
+                    errorMessage = "\(otaResult)"
+                } else {
+                    errorMessage = "\(error)"
+                }
+                let alert = UIAlertController(title: "Update Failed", message: errorMessage, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "Close", style: .cancel))
+                self.present(alert, animated: true)
+            }
         }
     }
 }
