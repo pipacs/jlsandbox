@@ -87,6 +87,44 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         self.connectionObserver = nil
     }
 
+    // MARK: - FOTA
+
+    func startFOTA(otaData: Data, callback: @escaping (Result<Float, Error>) -> Void) {
+        Logger.log()
+        self.didCancelFOTA = false
+
+        JieliManager.shared.jlOTAManager.cmdOTAData(otaData) { [weak self] otaResult, progress in
+            guard self?.didCancelFOTA != true else { return }
+            Logger.log("\(otaResult), progress: \(progress)")
+            switch otaResult {
+            case .success:
+                callback(.success(100))
+            case .fail, .failSameSN, .dataIsNull, .commandFail, .seekFail, .infoFail, .lowPower,
+                    .enterFail, .failedConnectMore, .failVerification,
+                    .failCompletely, .failKey, .failErrorFile, .failUboot, .failLenght,
+                    .failFlash, .failCmdTimeout, .failSameVersion, .failTWSDisconnect,
+                    .failNotInBin:
+                callback(.failure(Self.genericError))
+            case .upgrading, .reconnect, .reboot, .prepared, .statusIsUpdating,
+                    .reconnectWithMacAddr, .disconnect, .unknown:
+                callback(.success(progress))
+            case .preparing:
+                callback(.success(0))
+            case .cancel:
+                break
+            @unknown default:
+                break
+            }
+        }
+    }
+
+    func cancelFOTA(callback: @escaping (Result<Void, any Error>) -> Void) {
+        Logger.log()
+        didCancelFOTA = true
+        JieliManager.shared.jlManager.mOTAManager.cmdOTACancelResult()
+        callback(.success(()))
+    }
+
     // MARK: - CBCentralManagerDelegate
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
@@ -202,7 +240,7 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private let rcspWriteCharacteristic = "AE01"
     private let rcspReadCharacteristic = "AE02"
     private static let genericError = NSError(domain: "com.pipacs.Sandbox", code: -1)
-
+    private var didCancelFOTA = false
 
     /// Jieli Bluetooth assistant
     private let jlAssist: JL_Assist
@@ -243,6 +281,45 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                     callback()
                 }
             }
+        }
+    }
+}
+
+extension JL_OTAResult: @retroactive CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .cancel: return "Cancel"
+        case .success: return "Success"
+        case .fail: return "Fail"
+        case .dataIsNull: return "Data is Null"
+        case .commandFail: return "Command Fail"
+        case .seekFail: return "Seek Fail"
+        case .infoFail: return "Info Fail"
+        case .lowPower: return "Low Power"
+        case .enterFail: return "Enter Fail"
+        case .upgrading: return "Upgrading"
+        case .reconnect: return "Reconnect"
+        case .reboot: return "Reboot"
+        case .preparing: return "Preparing"
+        case .prepared: return "Prepared"
+        case .statusIsUpdating: return "Status Is Updating"
+        case .failedConnectMore: return "Failed Connect More"
+        case .failSameSN: return "Fail Same SN"
+        case .failVerification: return "Fail Verification"
+        case .failCompletely: return "Fail Completely"
+        case .failKey: return "Fail Key"
+        case .failErrorFile: return "Fail Error File"
+        case .failUboot: return "Fail UBoot"
+        case .failLenght: return "Fail Length"
+        case .failFlash: return "Fail Flash"
+        case .failCmdTimeout: return "Fail Command Timeout"
+        case .failSameVersion: return "Fail Same Version"
+        case .failTWSDisconnect: return "Fail TWS Not Connected"
+        case .failNotInBin: return "Fail Not In Bin"
+        case .reconnectWithMacAddr: return "Reconnect With Mac Address"
+        case .disconnect: return "Disconnect"
+        case .unknown: return "Unknown"
+        @unknown default: return "Unknown"
         }
     }
 }
