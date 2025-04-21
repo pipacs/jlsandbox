@@ -42,8 +42,8 @@ class DeviceListVC: UITableViewController {
         tableView.deselectRow(at: indexPath, animated: true)
         let device = devices[indexPath.row]
         let deviceVC = DeviceVC(device: device)
-        self.navigationController?.pushViewController(deviceVC, animated: true)
         JieliManager.shared.connect(device: device) { result in
+            self.navigationController?.pushViewController(deviceVC, animated: true)
             Logger.log("\(result)")
         }
     }

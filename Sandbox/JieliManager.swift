@@ -7,6 +7,7 @@ import Foundation
 import CoreBluetooth
 import JLLogHelper
 import JL_BLEKit
+import JL_AdvParse
 
 /// Manages Jieli devices using JL_BLEKit
 class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
@@ -15,6 +16,8 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     var jlManager: JL_ManagerM { jlAssist.mCmdManager }
     var jlTWSManager: JL_TwsManager { jlAssist.mCmdManager.mTwsManager }
     var jlOTAManager: JL_OTAManager { jlAssist.mCmdManager.mOTAManager }
+    private var reconnectMac: String = ""
+    private var otaData: Data = Data()
 
     override init() {
         JLLogManager.setLog(true, isMore: false, level: .COMPLETE)
@@ -27,13 +30,10 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         super.init()
 
         self.jlAssist.mNeedPaired = true
-        let pairKeyData: Data? = nil
-        self.jlAssist.mPairKey = pairKeyData
         self.jlAssist.mService = rcspService
         self.jlAssist.mRcsp_R = rcspReadCharacteristic
         self.jlAssist.mRcsp_W = rcspWriteCharacteristic
         self.jlAssist.mLogData = true
-        self.jlAssist.mLimitMtu = 128
     }
 
     // MARK: - Discovery
@@ -57,6 +57,12 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         self.connectionCallback = callback
         self.device = device
         self.centralManager.connect(device.peripheral)
+    }
+    
+    func reConnect(mac: String, callback: @escaping (Result<Float, any Error>) -> Void) {
+        self.reconnectMac = mac
+        otaCallBack = callback
+        self.startScanning()
     }
 
     func disconnect(callback: @escaping (Result<Void, any Error>) -> Void) {
@@ -84,12 +90,13 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func startFOTA(otaData: Data, callback: @escaping (Result<Float, Error>) -> Void) {
         Logger.log()
         self.didCancelFOTA = false
-
+        JieliManager.shared.jlOTAManager.maxLostCount(100)
+        self.otaData = otaData
         JieliManager.shared.jlOTAManager.cmdOTAData(otaData) { [weak self] otaResult, progress in
             guard self?.didCancelFOTA != true else { return }
             Logger.log("\(otaResult), progress: \(progress)")
             switch otaResult {
-            case .success:
+            case .success,.reboot:
                 callback(.success(101))
             case .fail, .failSameSN, .dataIsNull, .commandFail, .seekFail, .infoFail, .lowPower,
                     .enterFail, .failedConnectMore, .failVerification,
@@ -97,11 +104,13 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                     .failFlash, .failCmdTimeout, .failSameVersion, .failTWSDisconnect,
                     .failNotInBin:
                 callback(.failure(Self.makeError(code: otaResult.rawValue)))
-            case .upgrading, .reconnect, .reboot, .prepared, .statusIsUpdating,
-                    .reconnectWithMacAddr, .disconnect, .unknown:
+            case .upgrading, .reconnect, .prepared, .statusIsUpdating,
+                     .disconnect, .unknown:
                 callback(.success(progress))
+            case .reconnectWithMacAddr :
+                self?.reConnect(mac: self!.jlOTAManager.bleAddr, callback: callback)
             case .preparing:
-                callback(.success(0))
+                callback(.success(progress))
             case .cancel:
                 break
             @unknown default:
@@ -127,12 +136,30 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+        
         guard
             let manufacturerData = advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data,
             manufacturerData.count >= 2,
             manufacturerData[0] == 0xd6, manufacturerData[1] == 0x05
         else {
             return
+        }
+        if reconnectMac.count > 0 {
+            if JLAdvParse.otaBleMacAddress(reconnectMac, isEqualToCBAdvDataManufacturerData: manufacturerData) {
+                self.reconnectMac = ""
+                let device = JieliDevice(name: peripheral.name ?? "", peripheral: peripheral)
+                self.connect(device: device) { [weak self] result in
+                    guard let self else { return }
+                    switch result {
+                    case .success:
+                        if jlOTAManager.otaStatus == .force {
+                            self.startFOTA(otaData: self.otaData, callback: self.otaCallBack!)
+                        }
+                    case .failure(let error):
+                        JLLogManager.logLevel(.ERROR, content: "Reconnect error \(error)")
+                    }
+                }
+            }
         }
         var name: String? = peripheral.name
         if name == nil, let nameData = advertisementData[CBAdvertisementDataLocalNameKey] as? Data {
@@ -146,7 +173,6 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        self.jlAssist.mLimitMtu = peripheral.maximumWriteValueLength(for: .withResponse)
         peripheral.discoverServices(nil)
     }
 
@@ -230,6 +256,7 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private static let genericError = makeError(code: 42)
     private var didCancelFOTA = false
     private let jlAssist: JL_Assist
+    private var otaCallBack: ((Result<Float, any Error>) -> Void)?
 
     private static func makeError(code: UInt8) -> NSError {
         NSError(domain: "com.pipacs.sandbox", code: Int(code))
