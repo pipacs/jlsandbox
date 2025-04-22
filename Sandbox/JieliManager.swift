@@ -90,7 +90,6 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func startFOTA(otaData: Data, callback: @escaping (Result<Float, Error>) -> Void) {
         Logger.log()
         self.didCancelFOTA = false
-        JieliManager.shared.jlOTAManager.maxLostCount(100)
         self.otaData = otaData
         JieliManager.shared.jlOTAManager.cmdOTAData(otaData) { [weak self] otaResult, progress in
             guard self?.didCancelFOTA != true else { return }
