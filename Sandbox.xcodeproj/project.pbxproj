@@ -44,19 +44,19 @@
 		702789B32DAFB8DC006CDE85 /* Exceptions for "Sandbox" folder in "Embed Frameworks" phase from "Sandbox" target */ = {
 			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
 			attributesByRelativePath = {
-				JLLogHelper.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
-				JL_AdvParse.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
-				JL_BLEKit.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
-				JL_HashPair.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
-				JL_OTALib.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				Libraries/JLLogHelper.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				Libraries/JL_AdvParse.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				Libraries/JL_BLEKit.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				Libraries/JL_HashPair.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				Libraries/JL_OTALib.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
 			};
 			buildPhase = 702789B22DAFB8DC006CDE85 /* Embed Frameworks */;
 			membershipExceptions = (
-				JL_AdvParse.xcframework,
-				JL_BLEKit.xcframework,
-				JL_HashPair.xcframework,
-				JL_OTALib.xcframework,
-				JLLogHelper.xcframework,
+				Libraries/JL_AdvParse.xcframework,
+				Libraries/JL_BLEKit.xcframework,
+				Libraries/JL_HashPair.xcframework,
+				Libraries/JL_OTALib.xcframework,
+				Libraries/JLLogHelper.xcframework,
 			);
 		};
 /* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
@@ -199,9 +199,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Sandbox/Pods-Sandbox-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Sandbox/Pods-Sandbox-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -252,7 +256,7 @@
 				CODE_SIGN_ENTITLEMENTS = Sandbox/Sandbox.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = J8GU9SL7NG;
+				DEVELOPMENT_TEAM = 7LNJFYWCSB;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Sandbox/Info.plist;
@@ -290,7 +294,7 @@
 				CODE_SIGN_ENTITLEMENTS = Sandbox/Sandbox.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = J8GU9SL7NG;
+				DEVELOPMENT_TEAM = 7LNJFYWCSB;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Sandbox/Info.plist;

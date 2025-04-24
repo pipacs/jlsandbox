@@ -138,8 +138,9 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         
         guard
             let manufacturerData = advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data,
-            manufacturerData.count >= 2,
-            manufacturerData[0] == 0xd6, manufacturerData[1] == 0x05
+            manufacturerData.count >= 4,
+            (manufacturerData[0] == 0xd6 && manufacturerData[1] == 0x05) ||
+                (manufacturerData[0] == 0x41 && manufacturerData[1] == 0x02 && manufacturerData[2] == 0x03 && manufacturerData[3] == 0x02)
         else {
             return
         }
