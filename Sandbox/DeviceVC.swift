@@ -6,15 +6,11 @@
 //
 
 import UIKit
-import SnapKit
-import RxSwift
-import RxCocoa
 import JLLogHelper
 
-class DeviceVC: UIViewController {
+class DeviceVC: UITableViewController {
     let device: JieliDevice
-    let funcTableView = UITableView()
-    let itemsArray: BehaviorRelay<[String]> = BehaviorRelay(value: [
+    let itemsArray = [
         "GET EQ Info",
         "SET EQ",
         "GET ANC",
@@ -22,30 +18,12 @@ class DeviceVC: UIViewController {
         "GET Battery Level",
         "RENAME",
         "FOTA",
-    ])
-    let disposeBag = DisposeBag()
+    ]
     lazy var fotaVC = FotaVC()
 
     init(device: JieliDevice) {
         self.device = device
         super.init(nibName: nil, bundle: nil)
-        view.addSubview(funcTableView)
-        funcTableView.rowHeight = 40
-        funcTableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
-        itemsArray.bind(to: funcTableView.rx.items(cellIdentifier: "cell", cellType: UITableViewCell.self)) { _, item, cell in
-            cell.textLabel?.text = item
-        }.disposed(by: disposeBag)
-
-        funcTableView.snp.makeConstraints { make in
-            make.edges.equalTo(view)
-        }
-        
-        funcTableView.rx.itemSelected
-            .subscribe(onNext: { [weak self] indexPath in
-                guard let self = self else { return }
-                self.didSelectAction(indexPath.row)
-            })
-            .disposed(by: disposeBag)
     }
 
     required init?(coder: NSCoder) {
@@ -56,10 +34,27 @@ class DeviceVC: UIViewController {
         super.viewDidLoad()
         navigationItem.title = device.name
         view.backgroundColor = .systemBackground
+        tableView.rowHeight = 40
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
     }
-    
-    private func didSelectAction(_ index: Int) {
-        switch index {
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        tableView.reloadData()
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        if parent == nil {
+            JieliManager.shared.disconnect { _ in
+                Logger.log("Disconnected")
+            }
+        }
+    }
+
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        switch indexPath.row {
         case 0:
             ControlViewModel.getEQ { eq in
                 eq?.logProperties()
@@ -94,16 +89,20 @@ class DeviceVC: UIViewController {
         default:
             break
         }
-        self.funcTableView.reloadData()
+        tableView.reloadData()
     }
 
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        if parent == nil {
-            JieliManager.shared.disconnect { _ in
-                Logger.log("Disconnected")
-            }
-        }
+    override func numberOfSections(in tableView: UITableView) -> Int {
+        1
     }
 
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        itemsArray.count
+    }
+
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+        cell.textLabel?.text = itemsArray[indexPath.row]
+        return cell
+    }
 }
