@@ -23,7 +23,7 @@ class DeviceVC: UITableViewController {
 
     init(device: JieliDevice) {
         self.device = device
-        super.init(nibName: nil, bundle: nil)
+        super.init(style: .insetGrouped)
     }
 
     required init?(coder: NSCoder) {
