@@ -32,7 +32,7 @@ class FotaVC: UIViewController, UIDocumentPickerDelegate {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        refreshUI()
+        presetData()
     }
 
     // MARK: - UIDocumentPickerDelegate
@@ -91,6 +91,20 @@ class FotaVC: UIViewController, UIDocumentPickerDelegate {
             fotaLabel.text = "FOTA Image:"
         }
         fotaButton.isUserInteractionEnabled = fotaData != nil
+    }
+    
+    private func presetData() {
+        guard let path = Bundle.main.path(forResource: "bragi_update", ofType: "ufw") else { return }
+        let url = URL(fileURLWithPath: path)
+        do {
+            fotaData = try Data(contentsOf: url)
+            fotaFileName = url.lastPathComponent
+        } catch {
+            Logger.logError("\(error)")
+            fotaData = nil
+            fotaFileName = nil
+        }
+        refreshUI()
     }
 
     private func updateFirmware() {
