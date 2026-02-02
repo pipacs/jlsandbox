@@ -139,7 +139,7 @@ class FotaVC: UIViewController, UIDocumentPickerDelegate {
             Logger.logError("\(error)")
             fotaHUD.dismiss(animated: true) {
                 let errorMessage: String
-                if  let errorCode = UInt8(exactly: (error as NSError).code),
+                if  let errorCode = UInt16(exactly: (error as NSError).code),
                     let otaResult = JL_OTAResult(rawValue: errorCode)
                 {
                     errorMessage = "\(otaResult)"

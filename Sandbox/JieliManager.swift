@@ -29,7 +29,9 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 
         super.init()
 
-        self.jlAssist.mNeedPaired = true
+        // Deprecated: self.jlAssist.mNeedPaired = true
+        self.jlAssist.mAuthEnable = true
+
         self.jlAssist.mService = rcspService
         self.jlAssist.mRcsp_R = rcspReadCharacteristic
         self.jlAssist.mRcsp_W = rcspWriteCharacteristic
@@ -258,7 +260,7 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private let jlAssist: JL_Assist
     private var otaCallBack: ((Result<Float, any Error>) -> Void)?
 
-    private static func makeError(code: UInt8) -> NSError {
+    private static func makeError(code: UInt16) -> NSError {
         NSError(domain: "com.pipacs.sandbox", code: Int(code))
     }
 
@@ -333,6 +335,7 @@ extension JL_OTAResult: @retroactive CustomStringConvertible {
         case .reconnectWithMacAddr: return "Reconnect With Mac Address"
         case .disconnect: return "Disconnect"
         case .unknown: return "Unknown"
+        case .reconnectUpdateSource: return "Reconnect Update Source"
         @unknown default: return "Unknown"
         }
     }
