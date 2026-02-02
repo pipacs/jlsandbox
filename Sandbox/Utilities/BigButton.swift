@@ -18,7 +18,6 @@ class BigButton: UIButton {
         setTitleColor(.white, for: .normal)
         setTitleColor(.lightText, for: .disabled)
         layer.cornerRadius = 6
-        contentEdgeInsets = UIEdgeInsets(top: 7, left: 7, bottom: 7, right: 7)
         addTarget(self, action: #selector(handleTap), for: .touchUpInside)
         tintColor = .white
     }

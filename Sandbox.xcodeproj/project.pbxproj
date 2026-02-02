@@ -37,6 +37,7 @@
 		702789B32DAFB8DC006CDE85 /* Exceptions for "Sandbox" folder in "Embed Frameworks" phase from "Sandbox" target */ = {
 			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
 			attributesByRelativePath = {
+				Libraries/JLAudioUnitKit.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
 				Libraries/JLLogHelper.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
 				Libraries/JL_AdvParse.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
 				Libraries/JL_BLEKit.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
@@ -49,6 +50,7 @@
 				Libraries/JL_BLEKit.xcframework,
 				Libraries/JL_HashPair.xcframework,
 				Libraries/JL_OTALib.xcframework,
+				Libraries/JLAudioUnitKit.xcframework,
 				Libraries/JLLogHelper.xcframework,
 			);
 		};
@@ -200,7 +202,7 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 14;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -237,7 +239,7 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 14;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

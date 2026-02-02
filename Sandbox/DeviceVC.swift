@@ -18,8 +18,10 @@ class DeviceVC: UITableViewController {
         "GET Battery Level",
         "RENAME",
         "FOTA",
+        "GET Opus",
     ]
     lazy var fotaVC = FotaVC()
+    lazy var opusVC = OpusVC()
 
     init(device: JieliDevice) {
         self.device = device
@@ -86,6 +88,8 @@ class DeviceVC: UITableViewController {
             twsMgr.cmdHeadsetGetAdvFlag(.edrName)
         case 6:
             navigationController?.pushViewController(fotaVC, animated: true)
+        case 7:
+            navigationController?.pushViewController(opusVC, animated: true)
         default:
             break
         }

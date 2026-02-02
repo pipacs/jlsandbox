@@ -24,14 +24,12 @@ class DeviceListVC: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "Jieli Sandbox"
+        let discoveryButton = UIBarButtonItem(image: UIImage(systemName: "arrow.counterclockwise"), style: .plain, target: self, action: #selector(discover))
+        navigationItem.rightBarButtonItem = discoveryButton
     }
 
     override func viewDidAppear(_ animated: Bool) {
-        JieliManager.shared.startDiscovery { device in
-            self.deviceMap[device.peripheral.identifier] = device
-            self.devices = self.deviceMap.values.sorted { $0.name < $1.name }
-            self.tableView.reloadData()
-        }
+        discover()
     }
 
     override func viewDidDisappear(_ animated: Bool) {
@@ -64,5 +62,19 @@ class DeviceListVC: UITableViewController {
 
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         "Jieli Devices"
+    }
+
+    @objc private func discover() {
+        JieliManager.shared.stopDiscovery()
+        self.deviceMap.removeAll()
+        self.devices.removeAll()
+        self.tableView.reloadData()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            JieliManager.shared.startDiscovery { device in
+                self.deviceMap[device.peripheral.identifier] = device
+                self.devices = self.deviceMap.values.sorted { $0.name < $1.name }
+                self.tableView.reloadData()
+            }
+        }
     }
 }

@@ -41,11 +41,13 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     // MARK: - Discovery
 
     func startDiscovery(callback: @escaping (JieliDevice) -> Void) {
+        Logger.log()
         self.discoveryCallback = callback
         startScanning()
     }
 
     func stopDiscovery() {
+        Logger.log()
         self.discoveryCallback = nil
         stopScanning()
     }
@@ -130,6 +132,7 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     // MARK: - CBCentralManagerDelegate
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        Logger.log("State: \(central.state)")
         self.jlAssist.assistUpdate(central.state)
         if central.state == .poweredOn && self.discoveryCallback != nil {
             startScanning()
@@ -137,12 +140,14 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        
+        if let name = peripheral.name {
+            Logger.log(name)
+        }
         guard
             let manufacturerData = advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data,
             manufacturerData.count >= 4,
             (manufacturerData[0] == 0xd6 && manufacturerData[1] == 0x05) ||
-                (manufacturerData[0] == 0x41 && manufacturerData[1] == 0x02 && manufacturerData[2] == 0x03 && manufacturerData[3] == 0x02)
+                (manufacturerData[0] == 0x41 && manufacturerData[1] == 0x02 && manufacturerData[3] == 0x02)
         else {
             return
         }
@@ -175,6 +180,7 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        Logger.log()
         peripheral.discoverServices(nil)
     }
 
@@ -265,11 +271,13 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     private func startScanning() {
+        Logger.log()
         guard centralManager.state == .poweredOn else { return }
         centralManager.scanForPeripherals(withServices: nil)
     }
 
     private func stopScanning() {
+        Logger.log()
         centralManager.stopScan()
     }
 
