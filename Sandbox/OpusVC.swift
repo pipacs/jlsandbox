@@ -10,7 +10,7 @@ import Foundation
 import JL_BLEKit
 import JLAudioUnitKit
 
-class OpusVC: UIViewController, JLDevAudioManagerDelegate {
+class OpusVC: UIViewController, JLTranslationManagerDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "GET Opus Data"
@@ -36,25 +36,26 @@ class OpusVC: UIViewController, JLDevAudioManagerDelegate {
         ])
     }
 
-    // MARK: - JLDevAudioManagerDelegate methods
+    // MARK: - JLTranslationManager delegate methods
 
-    public func devAudioManager(_ manager: JLDevAudioManager, audio data: Data) {
-        let dataText = data.hexString
+    public func onInitSuccess(_ uuid: String) {
+        Logger.log(uuid)
+    }
+
+    public func onModeChange(_ uuid: String, mode: JLTranslateSetMode) {
+        Logger.log("\(uuid): \(mode)")
+    }
+
+    public func onReceiveAudioData(_ uuid: String, audioData data: JLTranslateAudio) {
+        let dataText = data.data.hexString
         Logger.log("Received " + dataText)
         streamData.text = dataText
     }
 
-    public func devAudioManager(_ manager: JLDevAudioManager, startByDeviceWithParam param: JLRecordParams) {
-        Logger.log("Starting with parameters \(param)")
+    public func onError(_ uuid: String, error err: any Error) {
+        Logger.logError("\(err)")
     }
 
-    public func devAudioManager(_ manager: JLDevAudioManager, stopByDeviceWithParam param: JLSpeechRecognition) {
-        Logger.log("Stopping with parameters \(param)")
-    }
-
-    public func devAudioManager(_ manager: JLDevAudioManager, status: JL_SpeakType) {
-        Logger.log("Status \(status)")
-    }
 
     // MARK: - Internal
 
@@ -71,11 +72,7 @@ class OpusVC: UIViewController, JLDevAudioManagerDelegate {
     }()
 
     private lazy var streamData = Label()
-
-    private lazy var audioManager: JLDevAudioManager = {
-        JLDevAudioManager.share(self, withManager: JieliManager.shared.jlManager)
-    }()
-
+    private var translationManager: JLTranslationManager?
 
     private func startStream() {
         Logger.log()
@@ -83,21 +80,23 @@ class OpusVC: UIViewController, JLDevAudioManagerDelegate {
         stopButton.isUserInteractionEnabled = true
         streamData.text = "(none)"
 
-        let params = JLRecordParams()
-        params.mDataType = .OPUS
-        params.mSampleRate = .rate16K
-        params.mVadWay = .normal
-        audioManager.cmdStartRecord(JieliManager.shared.jlManager, params: params) { status, _, _ in
-            Logger.log("Recorder callback: Status \(status)")
+        translationManager = JLTranslationManager(delegate: self, manager: JieliManager.shared.jlManager) { status, error in
+            Logger.log("Status: \(status)")
+            if let error { Logger.logError("\(error)") }
         }
+        let mode = JLTranslateSetMode()
+        mode.modeType = .onlyRecord
+        mode.channel = 1
+        mode.sampleRate = 1600
+        mode.dataType = .OPUS
+        translationManager?.trStartTranslate(mode)
     }
 
     private func stopStream() {
         Logger.log()
         startButton.isUserInteractionEnabled = true
         stopButton.isUserInteractionEnabled = false
-        audioManager.cmdStopRecord(JieliManager.shared.jlManager, reason: .normal) { status, _, _ in
-            Logger.log("Recording stopped, status \(status)")
-        }
+        translationManager?.trDestory()
+        translationManager = nil
     }
 }
