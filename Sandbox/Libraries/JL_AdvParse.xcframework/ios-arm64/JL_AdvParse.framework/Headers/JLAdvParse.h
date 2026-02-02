@@ -29,6 +29,7 @@ typedef NS_ENUM(NSInteger,JL_DeviceType) {
     JL_DeviceTypeHeadset            = 3,     //普通耳机类型
     JL_DeviceTypeSoundCard          = 4,     //声卡类型
     JL_DeviceTypeWatch              = 5,     //手表类型
+    JL_DeviceTypeDongle             = 6,     //Dongle
     JL_DeviceTypeTradition          = -1,    //传统设备类型
 };
 
@@ -44,6 +45,10 @@ typedef NS_ENUM(NSInteger,JL_DeviceType) {
 /// @param advertData 蓝牙广播字典
 +(NSDictionary*)bluetoothAdvParse:(NSData *_Nullable)key AdvData:(NSDictionary*_Nonnull)advertData;
 
+/// 解析蓝牙广播包
+/// @param advertData 蓝牙广播报字典
+/// @param rssi 蓝牙信号强度
++(NSDictionary *)bluetoothAdvData:(NSDictionary *)advertData RSSI:(NSNumber *)rssi;
 
 #pragma mark - 回连广播包信息
 /**
