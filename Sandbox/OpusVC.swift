@@ -80,22 +80,65 @@ class OpusVC: UIViewController, JLTranslationManagerDelegate {
         stopButton.isUserInteractionEnabled = true
         streamData.text = "(none)"
 
-        translationManager = JLTranslationManager(delegate: self, manager: JieliManager.shared.jlManager) { status, error in
-            Logger.log("Status: \(status)")
-            if let error { Logger.logError("\(error)") }
+        let chain = JLTaskChain()
+        chain.addTask { [weak self] _, completion in
+            guard let self else {
+                completion(nil, NSError(domain: "com.pipacs.sandbox", code: -1, userInfo: ["message": "self is nil"]))
+                return
+            }
+            //You don't need to create it every time, but make sure to initialize it before using this object
+            if self.translationManager != nil {
+                Logger.log("translationManager Already started")
+                completion(nil, nil)
+                return
+            }
+            translationManager = JLTranslationManager(delegate: self, manager: JieliManager.shared.jlManager) { status, error in
+                Logger.log("Status: \(status)")
+                if let error {
+                    Logger.logError("\(error)")
+                    completion(nil, error)
+                } else {
+                    completion(nil, nil)
+                }
+            }
         }
-        let mode = JLTranslateSetMode()
-        mode.modeType = .onlyRecord
-        mode.channel = 1
-        mode.sampleRate = 1600
-        mode.dataType = .OPUS
-        translationManager?.trStartTranslate(mode)
+        chain.addTask { [weak self] _, completion in
+            guard let self else {
+                completion(nil, NSError(domain: "com.pipacs.sandbox", code: -1, userInfo: ["message": "self is nil"]))
+                return
+            }
+            let mode = JLTranslateSetMode()
+            mode.modeType = .onlyRecord
+            mode.channel = 1
+            mode.sampleRate = 16000
+            mode.dataType = .OPUS
+            //To specify which party is responsible for recording, the default is to use the mobile device to record and then send the message
+            translationManager?.recordtype = .byDevice
+            translationManager?.trStartTranslate(mode)
+            completion(nil, nil)
+        }
+        
+        chain.run(withInitialInput: nil) { _, err in
+            if let err {
+                Logger.logError("Error: \(err)")
+            }else{
+                Logger.log("Success")
+            }
+        }
     }
 
     private func stopStream() {
         Logger.log()
         startButton.isUserInteractionEnabled = true
         stopButton.isUserInteractionEnabled = false
+        translationManager?.trExitMode { type, err in
+            if let err {
+                Logger.logError("Error: \(err)")
+            }
+        }
+    }
+    
+    deinit {
         translationManager?.trDestory()
         translationManager = nil
     }
