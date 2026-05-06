@@ -19,9 +19,11 @@ class DeviceVC: UITableViewController {
         "RENAME",
         "FOTA",
         "GET Opus",
+        "Custom Commands"
     ]
     lazy var fotaVC = FotaVC()
     lazy var opusVC = OpusVC()
+    lazy var customCommandVC = CustomCommandVC()
 
     init(device: JieliDevice) {
         self.device = device
@@ -90,6 +92,8 @@ class DeviceVC: UITableViewController {
             navigationController?.pushViewController(fotaVC, animated: true)
         case 7:
             navigationController?.pushViewController(opusVC, animated: true)
+        case 8:
+            navigationController?.pushViewController(customCommandVC, animated: true)
         default:
             break
         }

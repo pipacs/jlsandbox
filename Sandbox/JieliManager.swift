@@ -10,14 +10,16 @@ import JL_BLEKit
 import JL_AdvParse
 
 /// Manages Jieli devices using JL_BLEKit
-class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
+class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, JLCustomCmdPtl {
     static var shared = JieliManager()
     var device: JieliDevice?
     var jlManager: JL_ManagerM { jlAssist.mCmdManager }
     var jlTWSManager: JL_TwsManager { jlAssist.mCmdManager.mTwsManager }
     var jlOTAManager: JL_OTAManager { jlAssist.mCmdManager.mOTAManager }
+    var jlCustomManager: JL_CustomManager { jlAssist.mCmdManager.mCustomManager }
     private var reconnectMac: String = ""
     private var otaData: Data = Data()
+    var customMessageObserver: ((Data) -> Void)?
 
     override init() {
         JLLogManager.setLog(true, isMore: false, level: .COMPLETE)
@@ -36,6 +38,7 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         self.jlAssist.mRcsp_R = rcspReadCharacteristic
         self.jlAssist.mRcsp_W = rcspWriteCharacteristic
         self.jlAssist.mLogData = true
+        self.jlCustomManager.delegate = self
     }
 
     // MARK: - Discovery
@@ -116,7 +119,7 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                 callback(.success(progress))
             case .cancel:
                 break
-            @unknown default:
+            default:
                 break
             }
         }
@@ -250,6 +253,17 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             return
         }
         self.jlAssist.assistUpdateValue(for: characteristic)
+    }
+
+    // MARK: - JLCustomCmdPtl
+
+    func customCmdResponse(_ manager: JL_ManagerM, status: UInt8, with data: Data) {
+        Logger.log("Status: \(status), data: [\(data.hexString)]")
+    }
+
+    func customCmdRequire(_ manager: JL_ManagerM, with data: Data, isNeedResponse: Bool, sn: UInt8) {
+        Logger.log("[\(data.hexString)], needs response: \(isNeedResponse), sn: \(sn)")
+        customMessageObserver?(data)
     }
 
     // MARK: - Internal
