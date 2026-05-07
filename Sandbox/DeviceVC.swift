@@ -19,7 +19,7 @@ class DeviceVC: UITableViewController {
         "RENAME",
         "FOTA",
         "GET Opus",
-        "Custom Commands"
+        "Custom RCSP Commands"
     ]
     lazy var fotaVC = FotaVC()
     lazy var opusVC = OpusVC()

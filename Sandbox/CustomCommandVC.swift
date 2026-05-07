@@ -9,10 +9,11 @@ import UIKit
 import Foundation
 import JL_BLEKit
 
+/// Sends/receives custom RCSP commands
 class CustomCommandVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Custom Commands"
+        title = "Custom RCSP Commands"
         view.backgroundColor = .systemBackground
         let backgroundTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleBackgroundTap))
         backgroundTapGesture.cancelsTouchesInView = false
@@ -36,16 +37,7 @@ class CustomCommandVC: UIViewController {
             output.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
             output.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
         ])
-    }
-
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
         JieliManager.shared.customMessageObserver = receiveMessage
-    }
-
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        JieliManager.shared.customMessageObserver = nil
     }
 
     // MARK: - Internal
@@ -59,7 +51,7 @@ class CustomCommandVC: UIViewController {
         field.spellCheckingType = .no
         field.keyboardType = .decimalPad
         field.addTarget(self, action: #selector(endEditing), for: .editingDidEndOnExit)
-        let digitItems: [InputAccessoryButtonItem] = ["a", "b", "c", "d", "e", "f"]
+        let digitItems: [InputAccessoryButtonItem] = ["A", "B", "C", "D", "E", "F"]
             .map { digit in InputAccessoryButtonItem(title: digit) { [weak self] in self?.insertInputText(digit) } }
         let spaceItem = InputAccessoryButtonItem(title: "space") { [weak self] in self?.insertInputText(" ") }
         field.inputAccessoryView = InputAccessoryBar(items: digitItems + [spaceItem])
@@ -111,7 +103,7 @@ class CustomCommandVC: UIViewController {
         }
         JieliManager.shared.jlCustomManager.cmdCustomData(data, isNeedResponse: false) { [weak self] status, _, _ in
             if status == .success {
-                self?.showText(data.hexString, direction: "🎧⬅️")
+                self?.showText(data.hexString, direction: "🎧◀️")
             } else {
                 Logger.logError("Failed to send custom data, status: \(status)")
             }
@@ -119,7 +111,7 @@ class CustomCommandVC: UIViewController {
     }
 
     private func receiveMessage(_ message: Data) {
-        showText(message.hexString, direction: "🎧➡️")
+        showText(message.hexString, direction: "🎧▶️")
     }
 
     private func showText(_ text: String, direction: String) {
@@ -132,75 +124,5 @@ class CustomCommandVC: UIViewController {
         } else {
             output.text = newText
         }
-    }
-}
-
-/// A button item on an input accessory bar
-class InputAccessoryButtonItem: NSObject {
-    let button: UIButton
-    private var buttonAction: (() -> Void)?
-
-    init(title: String, action: @escaping () -> Void) {
-        self.buttonAction = action
-        let textColor = UIColor { $0.userInterfaceStyle == .dark ? .white : .black }
-        let btn = UIButton(type: .custom)
-        btn.setTitle(title, for: .normal)
-        btn.setTitleColor(textColor, for: .normal)
-        btn.sizeToFit()
-        self.button = btn
-        super.init()
-        btn.addTarget(self, action: #selector(handleAction), for: .touchUpInside)
-    }
-
-    @objc private func handleAction() {
-        buttonAction?()
-    }
-}
-
-/// Input accessory bar
-class InputAccessoryBar: UIView {
-    private var items: [InputAccessoryButtonItem] = []
-
-    init(items: [InputAccessoryButtonItem]) {
-        self.items = items
-        super.init(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 44))
-        autoresizingMask = .flexibleWidth
-        backgroundColor = UIColor {
-            $0.userInterfaceStyle == .dark ?
-                UIColor(red: 43.0/255.0, green: 43.0/255.0, blue: 43.0/255.0, alpha: 1) :
-                UIColor(red: 222.0/255.0, green: 224.0/255.0, blue: 228.0/255.0, alpha: 1)
-        }
-        let stack = UIStackView(arrangedSubviews: items.map(\.button))
-        stack.distribution = .equalSpacing
-        stack.alignment = .center
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(stack)
-        NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
-            stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
-            stack.topAnchor.constraint(equalTo: topAnchor),
-            stack.bottomAnchor.constraint(equalTo: bottomAnchor),
-        ])
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
-
-extension String {
-    private static let hexByteRegEx = try! NSRegularExpression(pattern: "[0-9a-f]{1,2}", options: .caseInsensitive)
-
-    /// Hex-encoded string as Data
-    var hexadecimal: Data? {
-        var data = Data(capacity: count / 2)
-        let preprocessed = self.replacingOccurrences(of: "0[xX]", with: "", options: .regularExpression)
-        Self.hexByteRegEx.enumerateMatches(in: preprocessed, range: NSRange(startIndex..., in: preprocessed)) { match, _, _ in
-            let byteString = (preprocessed as NSString).substring(with: match!.range)
-            let num = UInt8(byteString, radix: 16)!
-            data.append(num)
-        }
-        guard !data.isEmpty else { return nil }
-        return data
     }
 }
