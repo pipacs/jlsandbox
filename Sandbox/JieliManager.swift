@@ -263,6 +263,9 @@ class JieliManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, JL
 
     func customCmdRequire(_ manager: JL_ManagerM, with data: Data, isNeedResponse: Bool, sn: UInt8) {
         Logger.log("[\(data.hexString)], needs response: \(isNeedResponse), sn: \(sn)")
+        if isNeedResponse {
+            jlCustomManager.cmdCustomResponse(sn, data: nil)
+        }
         customMessageObserver?(data)
     }
 
